@@ -12,11 +12,21 @@ test('Parser output type', t => {
     t.end();
 });
 
-test('Integer parsing', t => {
+test('Number parsing', t => {
     t.deepEqual(parser.parse('a = 8'), [{'=': [{'var': ['a']}, 8]}]);
+    t.deepEqual(parser.parse('a = 8.2'), [{'=': [{'var': ['a']}, 8.2]}]);
+    t.deepEqual(parser.parse('a = .2'), [{'=': [{'var': ['a']}, 0.2]}]);
+    t.deepEqual(parser.parse('a = -2'), [{'=': [{'var': ['a']}, -2]}]);
+    t.deepEqual(parser.parse('a = 1--2'), [{'=': [{'var': ['a']}, {'-': [1, -2]}]}]);
     t.deepEqual(parser.parse('a =  8  '), [{'=': [{'var': ['a']}, 8]}]);
     t.deepEqual(parser.parse('a = (8)'), [{'=': [{'var': ['a']}, 8]}]);
     t.deepEqual(parser.parse('a = ( 8   )'), [{'=': [{'var': ['a']}, 8]}]);
+    t.end();
+});
+
+test('String parsing', t => {
+    t.deepEqual(parser.parse('a = "anything"'), [{'=': [{'var': ['a']}, 'anything']}]);
+    t.deepEqual(parser.parse('a = "this is a string"'), [{'=': [{'var': ['a']}, 'this is a string']}]);
     t.end();
 });
 
@@ -40,6 +50,12 @@ test('Operation priority', t => {
     t.deepEqual(parser.parse('a = 8 * 2 + 1'), [{'=': [{'var': ['a']}, {'+': [{'*': [8, 2]}, 1]}]}]);
     t.deepEqual(parser.parse('a = 8 * (2 + 1)'), [{'=': [{'var': ['a']}, {'*': [8, {'+': [2, 1]}]}]}]);
     t.deepEqual(parser.parse('a = (8+1) * ((2 * 1) + 9)'), [{'=': [{'var': ['a']}, {'*': [{'+': [8, 1]}, {'+': [{'*': [2, 1]}, 9]}]}]}]);
+    t.end();
+});
+
+test('Array parsing', t => {
+    t.deepEqual(parser.parse('a = [8]'), [{'=': [{'var': ['a']}, [8]]}]);
+    t.deepEqual(parser.parse('a = [8+2, myVar]'), [{'=': [{'var': ['a']}, [{'+': [8, 2]}, {'var': ['myVar']}]]}]);
     t.end();
 });
 
@@ -91,7 +107,6 @@ test('Function call', t => {
 
 test('Variable assignment', t => {
     t.deepEqual(parser.parse('myVar = 2'), [{'=': [{'var': ['myVar']}, 2]}]);
-    console.log('%j', parser.parse('myVar = 1 < 9 and myBoolean(myArg)'))
     t.deepEqual(parser.parse('myVar = 1 < 9 and myBoolean(myArg)'), [
         {'=': [{'var': ['myVar']}, {'and': [{'<': [1, 9]}, {'func': ['myBoolean', [{'var': ['myArg']}]]}]}]}
         ]);

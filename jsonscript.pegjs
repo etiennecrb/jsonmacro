@@ -81,18 +81,29 @@ Product
   }
 
 Term
-  = Integer
+  = SignedNumber
   / FunctionCall
   / Prop
   / Identifier
+  / Array
+  / String
   / '(' __ exp:Expression __ ')' {
     return exp;
   }
 
-Integer "integer"
-  = [0-9]+ {
-    return parseInt(text());
-  }
+SignedNumber
+  = [+-]? Number { return parseFloat(text()); }
+
+Number "number"
+  = [0-9] "." [0-9]* {
+      return parseFloat(text());
+    }
+  / "." [0-9]+ {
+      return parseFloat(text());
+    }
+  / [0-9]+ {
+      return parseFloat(text());
+    }
 
 Prop
   = head:Identifier
@@ -165,6 +176,24 @@ IdentifierPart
   = [a-zA-Z]
   / '_'
   / '$'
+
+Array "array"
+  = "[" __ elements:ElementList __ "]" {
+      return elements;
+    }
+
+ElementList
+  = head:(element:Expression) tail:(__ "," __ element:Expression { return element; })* {
+    return Array.prototype.concat.apply([head], tail);
+  }
+
+String "string"
+  = '"' chars:StringCharacter* '"' {
+      return chars.join('');
+    }
+
+StringCharacter
+  = !('"') . { return text(); }
 
 ReservedWord
   = 'if'
