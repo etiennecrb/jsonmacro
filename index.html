@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JsonScript demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/codemirror.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/codemirror.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/addon/mode/simple.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.30.0/mode/javascript/javascript.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pegjs/0.9.0/peg.js"></script>
+    <script src="demo.js"></script>
+    <style>
+        .CodeMirror { flex: 1; border: 1px solid silver; }
+
+        html, body { margin: 0; height: 100%; }
+        body { display: flex; flex-direction: row; justify-content: stretch; }
+        .col { flex: 1; display: flex; flex-direction: column; }
+        .cell { padding: 10px; display: flex; flex-direction: column; }
+        #editor, #output { flex: 2; }
+        #console { flex: 1; }
+    </style>
+</head>
+<body>
+<div class="col">
+    <div id="editor" class="cell"></div>
+</div>
+<div class="col">
+    <div id="output" class="cell"></div>
+    <div id="console" class="cell"></div>
+</div>
+</body>
+</html>
