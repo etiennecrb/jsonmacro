@@ -1,3 +1,4 @@
+export const grammar = `
 {
   function buildExpression(left, right) {
     if (right === null) {
@@ -210,7 +211,8 @@ __
   = WhiteSpace*
 
 WhiteSpace "whitespace"
-  = "\n"
-  / "\r"
-  / "\t"
+  = "\\n"
+  / "\\r"
+  / "\\t"
   / " "
+`;
