@@ -1,4 +1,4 @@
-import * as peg from 'pegjs';
+import peg from 'pegjs';
 
 import { grammar } from './grammar';
 

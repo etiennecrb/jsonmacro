@@ -8,7 +8,7 @@ export default [
 		entry: 'build/index.js',
 		dest: pkg.browser,
 		format: 'umd',
-		moduleName: 'jsonmacro',
+		moduleName: 'JsonMacro',
 		plugins: [
             resolve(),
             commonjs()
@@ -18,7 +18,12 @@ export default [
 	// CommonJS (for Node) and ES module (for bundlers) build
 	{
 		entry: 'build/index.js',
-		external: ['pegjs'],
+		external: [
+			'codemirror',
+			'codemirror/addon/mode/simple',
+			'codemirror/mode/javascript/javascript',
+			'pegjs'
+		],
 		targets: [
 			{ dest: pkg.main, format: 'cjs' },
 			{ dest: pkg.module, format: 'es' }
