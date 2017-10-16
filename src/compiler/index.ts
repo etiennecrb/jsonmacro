@@ -4,4 +4,4 @@ import { grammar } from './grammar';
 
 const parser = peg.generate(grammar);
 
-export const parse = (input: string): any => parser.parse(input);
+export const compile = (input: string): any => parser.parse(input);

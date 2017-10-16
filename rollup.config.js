@@ -5,7 +5,7 @@ import pkg from './package.json';
 export default [
 	// browser-friendly UMD build
 	{
-		entry: 'build/main.js',
+		entry: 'build/index.js',
 		dest: pkg.browser,
 		format: 'umd',
 		moduleName: 'jsonmacro',
@@ -17,7 +17,7 @@ export default [
 
 	// CommonJS (for Node) and ES module (for bundlers) build
 	{
-		entry: 'build/main.js',
+		entry: 'build/index.js',
 		external: ['pegjs'],
 		targets: [
 			{ dest: pkg.main, format: 'cjs' },
