@@ -1,5 +1,41 @@
 export const grammar = `
 {
+  var TYPE_VAR = 'var';
+  var TYPE_FUNC = 'func';
+  var TYPE_PROP = 'prop';
+  var TYPE_CALL = 'call';
+
+  function extractOptional(optional, index) {
+    return optional ? optional[index] : null;
+  }
+  
+  function optionalList(value) {
+    return value !== null ? value : [];
+  }
+
+  function extractList(list, index) {
+    return list.map(function (element) { return element[index]; });
+  }
+
+  function buildList(head, tail, index) {
+    return [head].concat(extractList(tail, index));
+  }
+  
+  function buildVariable(identifier) {
+    return {[TYPE_VAR]: [identifier]};
+  }
+  
+  function buildVariablePropOrMethod(head, tail) {
+    return tail.reduce(function (acc, element) {
+        var result = {};
+        result[element.type] = [acc, element.identifier];
+        if (element.type === TYPE_CALL) {
+          result[element.type].push(element.argumentList);
+        }
+        return result;
+      }, head);
+  }
+  
   function buildExpression(left, right) {
     if (right === null) {
       return left;
@@ -13,28 +49,31 @@ export const grammar = `
 
 Start
   = __ statements:Statements? __ {
-    return statements !== null ? statements : [];
+    return optionalList(statements);
   }
 
-Statements
+Statements "list of statements"
   = head:Statement tail:(__ Statement)* {
-    return [head].concat(tail.map(function (el) { return el[1]; }));
+    return buildList(head, tail, 1);
   }
 
-Statement
-  = VariableDeclaration
+Statement "statement"
+  = VariableAssignment
   / FunctionCall
   / IfThenElse
 
-VariableDeclaration
+VariableAssignment
   = variable:Identifier __ '=' !'=' __ assignment:Expression {
-    return {'=': [variable, assignment]};
+    return {'=': [buildVariable(variable), assignment]};
   }
 
 FunctionCall
-  = Method
-  / property:Identifier '(' __ argumentList: Arguments __ ')' {
-    return {'func': [property['var'][0], argumentList]};
+  = VariableMethod
+  / GlobalFunctionCall
+
+GlobalFunctionCall
+  = identifier:Identifier '(' __ argumentList: Arguments __ ')' {
+    return {[TYPE_FUNC]: [identifier, argumentList]};
   }
 
 IfThenElse
@@ -84,8 +123,8 @@ Product
 Term
   = SignedNumber
   / FunctionCall
-  / Prop
-  / Identifier
+  / VariablePropOrMethod
+  / Variable
   / Array
   / String
   / '(' __ exp:Expression __ ')' {
@@ -106,54 +145,34 @@ Number "number"
       return parseFloat(text());
     }
 
+VariablePropOrMethod
+  = head:Variable
+    tail:('.' PropOrMethod)+ {
+      return buildVariablePropOrMethod(head, extractList(tail, 1));
+    }
+
+VariableMethod
+  = head:Variable '.'
+    body:(PropOrMethod '.')*
+    tail:(Method) {
+      return buildVariablePropOrMethod(head, (extractList(body, 0) || []).concat([tail]));
+    }
+    
+PropOrMethod
+  = Method
+  / Prop
+
 Prop
-  = head:Identifier
-    tail:('.'
-      (property:Identifier '(' __ argumentList: Arguments __ ')' {
-         return {property: property['var'][0], call: true, argumentList: argumentList};
-      }
-      / property:Identifier {
-        return {property: property['var'][0], call: false};
-      })
-    )+ {
-      return tail.reduce(function(acc, element) {
-        var operator = element[1].call ? 'method' : 'property';
-        var result = {};
-        result[operator] = [acc, element[1].property];
-        if (element[1].call) {
-          result[operator].push(element[1].argumentList);
-        }
-        return result;
-      }, head);
+  = identifier:Identifier {
+      return {identifier: identifier, type: TYPE_PROP};
     }
 
 Method
-  = left:Identifier
-    middle:('.'
-      (property:Identifier '(' __ argumentList: Arguments __ ')' {
-         return {property: property['var'][0], call: true, argumentList: argumentList};
-      }
-      / property:Identifier {
-        return {property: property['var'][0], call: false};
-      })
-    )*
-    right:('.'
-      property:Identifier '(' __ argumentList: Arguments __ ')' {
-         return {property: property['var'][0], call: true, argumentList: argumentList};
-      }
-    ) {
-      return (middle || []).concat(right).reduce(function(acc, element) {
-        var operator = element[1].call ? 'method' : 'property';
-        var result = {};
-        result[operator] = [acc, element[1].property];
-        if (element[1].call) {
-          result[operator].push(element[1].argumentList);
-        }
-        return result;
-      }, head);
+  = identifier:Identifier '(' __ argumentList: Arguments __ ')' {
+      return {identifier: identifier, type: TYPE_CALL, argumentList: argumentList};
     }
 
-Arguments
+Arguments "list of arguments"
   = left:Expression right:(__ "," __ Expression)* {
       if (right === null) {
         return [left];
@@ -165,16 +184,22 @@ Arguments
     return [];
   }
 
-Identifier
+Variable "variable"
+  = Identifier {
+    return buildVariable(text());
+  }
+
+Identifier "identifier"
   = !ReservedWord name:IdentifierName { return name; }
 
-IdentifierName "identifier"
+IdentifierName
   = head:IdentifierPart tail:IdentifierPart* {
-      return {'var': [head + tail.join('')]};
+      return head + tail.join('');
     }
 
 IdentifierPart
   = [a-zA-Z]
+  / [0-9]
   / '_'
   / '$'
 

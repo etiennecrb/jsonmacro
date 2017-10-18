@@ -1,5 +1,5 @@
 const test = require('tape');
-const { compile } = require('..');
+const { compile } = require('../dist/jsonmacro.compiler');
 
 test('Parser output type', t => {
     t.deepEqual(compile(''), []);
@@ -97,6 +97,13 @@ test('Complex expression parsing', t => {
 
 test('Function call', t => {
     t.deepEqual(compile('myFunc()'), [{'func': ['myFunc', []]}]);
+    t.deepEqual(compile('myVar.myFunc()'), [{'call': [{'var': ['myVar']}, 'myFunc', []]}]);
+    t.deepEqual(compile('myVar.myFunc().myFunc2()'), [
+        {'call': [{'call': [{'var': ['myVar']}, 'myFunc', []]}, 'myFunc2', []]}
+    ]);
+    t.deepEqual(compile('myVar.myFunc().local.myFunc2()'), [
+        {'call': [{'prop': [{'call': [{'var': ['myVar']}, 'myFunc', []]}, 'local']}, 'myFunc2', []]}
+    ]);
     t.end();
 });
 
@@ -108,15 +115,15 @@ test('Variable assignment', t => {
     t.end();
 });
 
-test('Variable, properties and methods parsing', t => {
+test('Variable, properties and calls parsing', t => {
     t.deepEqual(compile('a = myVar'), [{'=': [{'var': ['a']}, {'var': ['myVar']}]}]);
-    t.deepEqual(compile('a = myVar.myProp'), [{'=': [{'var': ['a']}, {'property': [{'var': ['myVar']}, 'myProp']}]}]);
-    t.deepEqual(compile('a = myVar.myMethod()'), [{'=': [{'var': ['a']}, {'method': [{'var': ['myVar']}, 'myMethod', []]}]}]);
-    t.deepEqual(compile('a = myVar.myMethod().myProp'), [{'=': [{'var': ['a']}, {'property': [
-        {'method': [{'var': ['myVar']}, 'myMethod', []]}, 'myProp'
+    t.deepEqual(compile('a = myVar.myProp'), [{'=': [{'var': ['a']}, {'prop': [{'var': ['myVar']}, 'myProp']}]}]);
+    t.deepEqual(compile('a = myVar.myMethod()'), [{'=': [{'var': ['a']}, {'call': [{'var': ['myVar']}, 'myMethod', []]}]}]);
+    t.deepEqual(compile('a = myVar.myMethod().myProp'), [{'=': [{'var': ['a']}, {'prop': [
+        {'call': [{'var': ['myVar']}, 'myMethod', []]}, 'myProp'
     ]}]}]);
     t.deepEqual(compile('a = myVar.myMethod(1, 3 > 2, otherVar)'), [{'=': [{'var': ['a']},
-        {'method': [{'var': ['myVar']}, 'myMethod', [1, {'>': [3, 2]}, {'var': ['otherVar']}]]}
+        {'call': [{'var': ['myVar']}, 'myMethod', [1, {'>': [3, 2]}, {'var': ['otherVar']}]]}
     ]}]);
     t.end();
 });
@@ -129,7 +136,7 @@ test('Complex expression with variable parsing', t => {
                 {'+': [8, {'*': [{'var': ['myVar_']}, 3]}]},
                 {'>': [2, 8]}
             ]},
-            {'and': [{'method': [{'var': ['myVar']}, '_myBooleanMethod', []]}, 2]}
+            {'and': [{'call': [{'var': ['myVar']}, '_myBooleanMethod', []]}, 2]}
         ]}]}
     ]);
     t.end();
@@ -143,9 +150,9 @@ test('If then else parsing', t => {
     `;
     t.deepEqual(compile(s), [
         {'if': [
-            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'property': [{'var': ['a']}, 'b']}, 2]}]},
+            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'prop': [{'var': ['a']}, 'b']}, 2]}]},
             [
-                {'func': ['myFunc', [{'var': ['a']}, {'property': [{'var': ['a']}, 'b']}]]}
+                {'func': ['myFunc', [{'var': ['a']}, {'prop': [{'var': ['a']}, 'b']}]]}
             ],
             []
         ]}
@@ -160,9 +167,9 @@ test('If then else parsing', t => {
     `;
     t.deepEqual(compile(s), [
         {'if': [
-            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'property': [{'var': ['a']}, 'b']}, 2]}]},
+            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'prop': [{'var': ['a']}, 'b']}, 2]}]},
             [
-                {'func': ['myFunc', [{'var': ['a']}, {'property': [{'var': ['a']}, 'b']}]]}
+                {'func': ['myFunc', [{'var': ['a']}, {'prop': [{'var': ['a']}, 'b']}]]}
             ],
             [
                 {'func': ['myOtherFunc', []]}
@@ -181,9 +188,9 @@ test('If then else parsing', t => {
     `;
     t.deepEqual(compile(s), [
         {'if': [
-            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'property': [{'var': ['a']}, 'b']}, 2]}]},
+            {'or': [{'>': [{'var': ['a']}, 8]}, {'==': [{'prop': [{'var': ['a']}, 'b']}, 2]}]},
             [
-                {'func': ['myFunc', [{'var': ['a']}, {'property': [{'var': ['a']}, 'b']}]]}
+                {'func': ['myFunc', [{'var': ['a']}, {'prop': [{'var': ['a']}, 'b']}]]}
             ],
             [
                 {'if': [

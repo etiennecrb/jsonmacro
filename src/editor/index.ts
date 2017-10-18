@@ -1,7 +1,7 @@
 import 'codemirror/addon/mode/simple';
 import 'codemirror/mode/javascript/javascript';
 import codeMirror from 'codemirror';
-import { compile } from '../index';
+import { compile } from '../compiler';
 
 // codeMirror.defineSimpleMode('jsonmacro', {
 //     // The start state contains the rules that are intially used
@@ -48,7 +48,7 @@ export function editor(element: HTMLElement) {
 
     const editorCm = codeMirror(editorEl, { value: '', mode: 'jsonmacro' });
     const outputCm = codeMirror(outputEl, { value: '', mode: 'application/json', readOnly: true });
-    const consoleCm = codeMirror(consoleEl, { value: '', readOnly: true });
+    const consoleCm = codeMirror(consoleEl, { value: '', readOnly: true, lineWrapping: true });
 
     element.appendChild(container);
 
