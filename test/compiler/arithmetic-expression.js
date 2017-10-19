@@ -1,29 +1,11 @@
 const test = require('tape');
-const { compile } = require('../dist/jsonmacro.compiler');
 
-test('Parser output type', t => {
-    t.deepEqual(compile(''), []);
-    t.deepEqual(compile('  \n \r'), []);
-    t.end();
-});
+const { compile } = require('../../dist/jsonmacro.compiler');
 
-test('Number parsing', t => {
-    t.deepEqual(compile('a = 8'), [{'=': [{'var': ['a']}, 8]}]);
-    t.deepEqual(compile('a = 8.2'), [{'=': [{'var': ['a']}, 8.2]}]);
-    t.deepEqual(compile('a = .2'), [{'=': [{'var': ['a']}, 0.2]}]);
-    t.deepEqual(compile('a = -2'), [{'=': [{'var': ['a']}, -2]}]);
-    t.deepEqual(compile('a = 1--2'), [{'=': [{'var': ['a']}, {'-': [1, -2]}]}]);
-    t.deepEqual(compile('a =  8  '), [{'=': [{'var': ['a']}, 8]}]);
-    t.deepEqual(compile('a = (8)'), [{'=': [{'var': ['a']}, 8]}]);
-    t.deepEqual(compile('a = ( 8   )'), [{'=': [{'var': ['a']}, 8]}]);
-    t.end();
-});
-
-test('String parsing', t => {
-    t.deepEqual(compile('a = "anything"'), [{'=': [{'var': ['a']}, 'anything']}]);
-    t.deepEqual(compile('a = "this is a string"'), [{'=': [{'var': ['a']}, 'this is a string']}]);
-    t.end();
-});
+const TYPE_VAR = 'var';
+const TYPE_FUNC = 'func';
+const TYPE_PROP = 'prop';
+const TYPE_CALL = 'call';
 
 test('Sum parsing', t => {
     t.deepEqual(compile('a = 8 + 2'), [{'=': [{'var': ['a']}, {'+': [8, 2]}]}]);
@@ -45,12 +27,6 @@ test('Operation priority', t => {
     t.deepEqual(compile('a = 8 * 2 + 1'), [{'=': [{'var': ['a']}, {'+': [{'*': [8, 2]}, 1]}]}]);
     t.deepEqual(compile('a = 8 * (2 + 1)'), [{'=': [{'var': ['a']}, {'*': [8, {'+': [2, 1]}]}]}]);
     t.deepEqual(compile('a = (8+1) * ((2 * 1) + 9)'), [{'=': [{'var': ['a']}, {'*': [{'+': [8, 1]}, {'+': [{'*': [2, 1]}, 9]}]}]}]);
-    t.end();
-});
-
-test('Array parsing', t => {
-    t.deepEqual(compile('a = [8]'), [{'=': [{'var': ['a']}, [8]]}]);
-    t.deepEqual(compile('a = [8+2, myVar]'), [{'=': [{'var': ['a']}, [{'+': [8, 2]}, {'var': ['myVar']}]]}]);
     t.end();
 });
 
@@ -95,36 +71,12 @@ test('Complex expression parsing', t => {
     t.end();
 });
 
-test('Function call', t => {
-    t.deepEqual(compile('myFunc()'), [{'func': ['myFunc', []]}]);
-    t.deepEqual(compile('myVar.myFunc()'), [{'call': [{'var': ['myVar']}, 'myFunc', []]}]);
-    t.deepEqual(compile('myVar.myFunc().myFunc2()'), [
-        {'call': [{'call': [{'var': ['myVar']}, 'myFunc', []]}, 'myFunc2', []]}
-    ]);
-    t.deepEqual(compile('myVar.myFunc().local.myFunc2()'), [
-        {'call': [{'prop': [{'call': [{'var': ['myVar']}, 'myFunc', []]}, 'local']}, 'myFunc2', []]}
-    ]);
-    t.end();
-});
 
 test('Variable assignment', t => {
     t.deepEqual(compile('myVar = 2'), [{'=': [{'var': ['myVar']}, 2]}]);
     t.deepEqual(compile('myVar = 1 < 9 and myBoolean(myArg)'), [
         {'=': [{'var': ['myVar']}, {'and': [{'<': [1, 9]}, {'func': ['myBoolean', [{'var': ['myArg']}]]}]}]}
-        ]);
-    t.end();
-});
-
-test('Variable, properties and calls parsing', t => {
-    t.deepEqual(compile('a = myVar'), [{'=': [{'var': ['a']}, {'var': ['myVar']}]}]);
-    t.deepEqual(compile('a = myVar.myProp'), [{'=': [{'var': ['a']}, {'prop': [{'var': ['myVar']}, 'myProp']}]}]);
-    t.deepEqual(compile('a = myVar.myMethod()'), [{'=': [{'var': ['a']}, {'call': [{'var': ['myVar']}, 'myMethod', []]}]}]);
-    t.deepEqual(compile('a = myVar.myMethod().myProp'), [{'=': [{'var': ['a']}, {'prop': [
-        {'call': [{'var': ['myVar']}, 'myMethod', []]}, 'myProp'
-    ]}]}]);
-    t.deepEqual(compile('a = myVar.myMethod(1, 3 > 2, otherVar)'), [{'=': [{'var': ['a']},
-        {'call': [{'var': ['myVar']}, 'myMethod', [1, {'>': [3, 2]}, {'var': ['otherVar']}]]}
-    ]}]);
+    ]);
     t.end();
 });
 

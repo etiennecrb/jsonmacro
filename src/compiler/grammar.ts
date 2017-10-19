@@ -30,7 +30,7 @@ export const grammar = `
         var result = {};
         result[element.type] = [acc, element.identifier];
         if (element.type === TYPE_CALL) {
-          result[element.type].push(element.argumentList);
+          result[element.type].push(element.args);
         }
         return result;
       }, head);
@@ -72,8 +72,8 @@ FunctionCall
   / GlobalFunctionCall
 
 GlobalFunctionCall
-  = identifier:Identifier '(' __ argumentList: Arguments __ ')' {
-    return {[TYPE_FUNC]: [identifier, argumentList]};
+  = identifier:Identifier '(' __ args: ElementList __ ')' {
+    return {[TYPE_FUNC]: [identifier, args]};
   }
 
 IfThenElse
@@ -131,19 +131,13 @@ Term
     return exp;
   }
 
-SignedNumber
+SignedNumber "number"
   = [+-]? Number { return parseFloat(text()); }
 
-Number "number"
-  = [0-9] "." [0-9]* {
-      return parseFloat(text());
-    }
-  / "." [0-9]+ {
-      return parseFloat(text());
-    }
-  / [0-9]+ {
-      return parseFloat(text());
-    }
+Number
+  = [0-9] "." [0-9]* 
+  / "." [0-9]+
+  / [0-9]+
 
 VariablePropOrMethod
   = head:Variable
@@ -168,21 +162,9 @@ Prop
     }
 
 Method
-  = identifier:Identifier '(' __ argumentList: Arguments __ ')' {
-      return {identifier: identifier, type: TYPE_CALL, argumentList: argumentList};
+  = identifier:Identifier '(' __ args: ElementList __ ')' {
+      return {identifier: identifier, type: TYPE_CALL, args: args};
     }
-
-Arguments "list of arguments"
-  = left:Expression right:(__ "," __ Expression)* {
-      if (right === null) {
-        return [left];
-      } else {
-        return [left].concat(right.map(function (el) { return el[3]; }));
-      }
-    }
-  / __ {
-    return [];
-  }
 
 Variable "variable"
   = Identifier {
@@ -193,15 +175,20 @@ Identifier "identifier"
   = !ReservedWord name:IdentifierName { return name; }
 
 IdentifierName
-  = head:IdentifierPart tail:IdentifierPart* {
+  = head:IdentifierStart tail:IdentifierPart* {
       return head + tail.join('');
     }
+
+IdentifierStart
+  = [a-zA-Z]
+  / '$'
+  / '_'
 
 IdentifierPart
   = [a-zA-Z]
   / [0-9]
-  / '_'
   / '$'
+  / '_'
 
 Array "array"
   = "[" __ elements:ElementList __ "]" {
@@ -210,7 +197,10 @@ Array "array"
 
 ElementList
   = head:(element:Expression) tail:(__ "," __ element:Expression { return element; })* {
-    return Array.prototype.concat.apply([head], tail);
+      return Array.prototype.concat.call([head], tail);
+    }
+  / __ {
+    return [];
   }
 
 String "string"
@@ -222,15 +212,15 @@ StringCharacter
   = !('"') . { return text(); }
 
 ReservedWord
-  = 'if'
-  / 'then'
-  / 'else'
-  / 'for each'
-  / 'end'
-  / 'while'
-  / 'in'
-  / 'and'
-  / 'or'
+  = 'if' !IdentifierPart
+  / 'then' !IdentifierPart
+  / 'else' !IdentifierPart
+  / 'for each' !IdentifierPart
+  / 'end' !IdentifierPart
+  / 'while' !IdentifierPart
+  / 'in' !IdentifierPart
+  / 'and' !IdentifierPart
+  / 'or' !IdentifierPart
 
 __
   = WhiteSpace*
