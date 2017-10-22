@@ -11,8 +11,8 @@ This project aims at creating a set of tools to make your users code and to exec
  - [x] Variable and function
  - [x] If X then Y else Z
  - [x] NOT operator
+ - [x] For each X in Y do Z
  - [ ] Handle signed expression like `a = -(1+2)`
- - [ ] For each X in Y do Z
  - [ ] While X do Y
  - [ ] All X in Y verify Z
  - [ ] Some X in Y verify Z

@@ -61,6 +61,7 @@ Statement "statement"
   = VariableAssignment
   / FunctionCall
   / IfThenElse
+  / ForEachInDo
 
 VariableAssignment
   = variable:Identifier __ '=' !'=' __ assignment:Expression {
@@ -77,25 +78,32 @@ GlobalFunctionCall
   }
 
 IfThenElse
-  = 'if' __ predicate:Expression __ 'then' __
+  = If __ predicate:Expression __ Then __
     thenStatements:Statements __
     elseStatements:(
-      'else' __ elseIfStatements:IfThenElse { return [elseIfStatements]; }
-      / 'else' __ elseStatements:Statements __ 'end' __ { return elseStatements; }
-      / 'end' __ { return null; }
+      Else __ elseIfStatements:IfThenElse { return [elseIfStatements]; }
+      / Else __ elseStatements:Statements __ End __ { return elseStatements; }
+      / End __ { return null; }
     ) {
     return {'if': [predicate, thenStatements, elseStatements || []]};
   }
 
-Expression
-  = Or
+ForEachInDo
+  = For __ Each __ localVar:Identifier __ In __ list:Term __ Do __
+    statements:Statements __
+    End __ {
+    return {'foreach': [localVar, list, statements || []]};
+  }
 
-Or
-  = head:And tail:( __ 'or' __ And)* {
+Expression
+  = OrExpression
+
+OrExpression
+  = head:AndExpression tail:( __ 'or' __ AndExpression)* {
       return buildExpression(head, tail);
   }
 
-And
+AndExpression
   = head:Equality tail:( __ 'and' __ Equality)* {
       return buildExpression(head, tail);
   }
@@ -116,11 +124,11 @@ Sum
   }
 
 Product
-  = head:Not tail:( __ ('*' / '/') __ Not)* {
+  = head:NotExpression tail:( __ ('*' / '/') __ NotExpression)* {
       return buildExpression(head, tail);
   }
 
-Not
+NotExpression
   = not:('not' __ Term) {
       return {'not': [not[2]]};
   }
@@ -218,16 +226,29 @@ StringCharacter
   = !('"') . { return text(); }
 
 ReservedWord
-  = 'if' !IdentifierPart
-  / 'then' !IdentifierPart
-  / 'else' !IdentifierPart
-  / 'for each' !IdentifierPart
-  / 'end' !IdentifierPart
-  / 'not' !IdentifierPart
-  / 'while' !IdentifierPart
-  / 'in' !IdentifierPart
-  / 'and' !IdentifierPart
-  / 'or' !IdentifierPart
+  = If
+  / Then
+  / Else
+  / For
+  / Each
+  / Do
+  / End
+  / Not
+  / In
+  / And
+  / Or
+
+If = 'if' !IdentifierPart
+Then = 'then' !IdentifierPart
+Else = 'else' !IdentifierPart
+For = 'for' !IdentifierPart
+Each = 'each' !IdentifierPart
+In = 'in' !IdentifierPart
+Do = 'do' !IdentifierPart
+End = 'end' !IdentifierPart
+Not = 'not' !IdentifierPart
+And = 'and' !IdentifierPart
+Or = 'or' !IdentifierPart
 
 __
   = WhiteSpace*

@@ -204,3 +204,65 @@ test('If then else parsing', t => {
     );
     t.end();
 });
+
+test('For each do parsing', t => {
+    t.deepEqual(
+        compile(`
+            for each i in [1, 2, 3] do
+                doNothing()
+            end
+        `),
+        [{'foreach': ['i', [1, 2, 3], [{[TYPE_FUNC]: ['doNothing', []]}]]}],
+        'it should parse simple for each statement'
+    );
+
+    t.deepEqual(
+        compile(`
+            for each i in [1, 2, 3] do doNothing() end
+        `),
+        [{'foreach': ['i', [1, 2, 3], [{[TYPE_FUNC]: ['doNothing', []]}]]}],
+        'it should allow for each statement without indentation'
+    );
+
+    t.throws(
+        () => compile(`
+            for each i in [1, 2, 3] do
+                doNothing()
+        `),
+        undefined,
+        'it should not allow for each statement without end keyword'
+    );
+
+    t.throws(
+        () => compile(`
+            for each i in [1, 2, 3]
+                doNothing()
+            end
+        `),
+        undefined,
+        'it should not allow for each statement without do keyword'
+    );
+
+    t.deepEqual(
+        compile(`
+            for each i in myVar do
+                for each j in [3, 4] do
+                    if 3 != 2 then
+                        doNothing()
+                    end
+                end
+            end
+        `),
+        [{'foreach': ['i', {[TYPE_VAR]: ['myVar']}, [
+            {'foreach': ['j', [3, 4], [
+                {'if': [{'!=': [3, 2]}, [
+                    {[TYPE_FUNC]: ['doNothing', []]}
+                ],
+                    []
+                ]}
+            ]]}
+        ]]}],
+        'it should parse nested for each and if then statements'
+    );
+    t.end();
+});
