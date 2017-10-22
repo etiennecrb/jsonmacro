@@ -36,13 +36,13 @@ export const grammar = `
       }, head);
   }
   
-  function buildExpression(left, right) {
-    if (right === null) {
-      return left;
+  function buildExpression(head, tail) {
+    if (tail === null) {
+      return head;
     } else {
-      return right.reduce(function (result, el) {
+      return tail.reduce(function (result, el) {
         return {[el[1]]: [result, el[3]]};
-      }, left);
+      }, head);
     }
   }
 }
@@ -91,33 +91,33 @@ Expression
   = Or
 
 Or
-  = left:And right:( __ 'or' __ And)* {
-      return buildExpression(left, right);
+  = head:And tail:( __ 'or' __ And)* {
+      return buildExpression(head, tail);
   }
 
 And
-  = left:Equality right:( __ 'and' __ Equality)* {
-      return buildExpression(left, right);
+  = head:Equality tail:( __ 'and' __ Equality)* {
+      return buildExpression(head, tail);
   }
 
 Equality
-  = left:Relation right:(__ ('==' / '!=') __ Relation)* {
-      return buildExpression(left, right);
+  = head:Relation tail:(__ ('==' / '!=') __ Relation)* {
+      return buildExpression(head, tail);
     }
 
 Relation
-  = left:Sum right:(__ ('<=' / '>=' / '<' / '>') __ Sum)* {
-      return buildExpression(left, right);
+  = head:Sum tail:(__ ('<=' / '>=' / '<' / '>') __ Sum)* {
+      return buildExpression(head, tail);
     }
 
 Sum
-  = left:Product right:( __ ('+' / '-') __ Product)* {
-      return buildExpression(left, right);
+  = head:Product tail:( __ ('+' / '-') __ Product)* {
+      return buildExpression(head, tail);
   }
 
 Product
-  = left:Term right:( __ ('*' / '/') __ Term)* {
-      return buildExpression(left, right);
+  = head:Term tail:( __ ('*' / '/') __ Term)* {
+      return buildExpression(head, tail);
   }
 
 Term

@@ -1,2 +1,2 @@
-require('./compiler/arithmetic-expression');
+require('./compiler/expression');
 require('./compiler/term');
