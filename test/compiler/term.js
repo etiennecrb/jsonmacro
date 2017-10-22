@@ -91,7 +91,7 @@ test('Array parsing', t => {
 });
 
 test('Function call parsing', t => {
-    t.deepEqual(compile('myFunc()'), [{[TYPE_FUNC]: ['myFunc', []]}], 'it should parse function calls');;
+    t.deepEqual(compile('myFunc()'), [{[TYPE_FUNC]: ['myFunc', []]}], 'it should parse function calls');
     t.deepEqual(compile('a()'), [{[TYPE_FUNC]: ['a', []]}], 'it should allow function name with one letter');
     t.throws(() => compile('(a())'), undefined, 'it should not allow function call inside parentheses as statement');
     t.deepEqual(

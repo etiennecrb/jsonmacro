@@ -175,6 +175,32 @@ test('AND-OR precedence', t => {
     t.end();
 });
 
+test('NOT parsing', t => {
+    t.deepEqual(rhs(t, compile('a = not 2')), {'not': [2]}, 'it should parse simple NOT expression');
+    t.deepEqual(
+        rhs(t, compile('a = not myBoolean')),
+        {'not': [{[TYPE_VAR]: ['myBoolean']}]},
+        'it should parse simple NOT expression with variable'
+    );
+    t.deepEqual(
+        rhs(t, compile('a = 1 and not 0 or 2')),
+        {'or': [
+            {'and': [1, {'not': [0]}]},
+            2
+        ]},
+        'it should parse simple NOT expression within boolean expression'
+    );
+    t.deepEqual(
+        rhs(t, compile('a = 1 and not (0 or 2)')),
+        {'and': [
+            1,
+            {'not': [{'or': [0, 2]}]}
+        ]},
+        'it should parse NOT expression within boolean expression with parentheses precedence'
+    );
+    t.end();
+});
+
 test('Relation parsing', t => {
     t.deepEqual(rhs(t, compile('a = 8 <= 2')), {'<=': [8, 2]});
     t.deepEqual(rhs(t, compile('a = 8 >= 2')), {'>=': [8, 2]});
@@ -261,14 +287,14 @@ test('Expression type precedence', t => {
         'it should enforce expression precedence on complex expression with parentheses'
     );
     t.deepEqual(
-        rhs(t, compile('a = myVar == [] + "string" and myFunc(3, 4) > 1 or myVar.myProp / (2) <= 0')),
+        rhs(t, compile('a = myVar == [] + "string" and myFunc(3, 4) > 1 or not myVar.myProp / (2) <= 0')),
         {'or': [
             {'and': [
                 {'==': [{[TYPE_VAR]: ['myVar']}, {'+': [[], 'string']}]},
                 {'>': [{[TYPE_FUNC]: ['myFunc', [3, 4]]}, 1]}
             ]},
             {'<=': [
-                {'/': [{[TYPE_PROP]: [{[TYPE_VAR]: ['myVar']}, 'myProp']}, 2]},
+                {'/': [{'not': [{[TYPE_PROP]: [{[TYPE_VAR]: ['myVar']}, 'myProp']}]}, 2]},
                 0
             ]}
         ]},

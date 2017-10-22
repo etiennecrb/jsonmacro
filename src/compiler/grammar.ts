@@ -116,9 +116,15 @@ Sum
   }
 
 Product
-  = head:Term tail:( __ ('*' / '/') __ Term)* {
+  = head:Not tail:( __ ('*' / '/') __ Not)* {
       return buildExpression(head, tail);
   }
+
+Not
+  = not:('not' __ Term) {
+      return {'not': [not[2]]};
+  }
+  / Term
 
 Term
   = SignedNumber
@@ -217,6 +223,7 @@ ReservedWord
   / 'else' !IdentifierPart
   / 'for each' !IdentifierPart
   / 'end' !IdentifierPart
+  / 'not' !IdentifierPart
   / 'while' !IdentifierPart
   / 'in' !IdentifierPart
   / 'and' !IdentifierPart
