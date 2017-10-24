@@ -25,9 +25,9 @@
 
 .jsonm-editor,
 .jsonm-output {
-    flex: 2;
+    flex: 1;
 }
 
 .jsonm-console {
-    flex: 1;
+    flex: 0 0 60px;
 }

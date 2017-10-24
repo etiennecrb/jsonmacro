@@ -1,27 +1,31 @@
+import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/addon/mode/simple';
+import 'codemirror/addon/selection/active-line';
 import 'codemirror/mode/javascript/javascript';
 import codeMirror from 'codemirror';
 import { compile } from '../compiler';
+import compact from 'lodash/compact';
+import every from 'lodash/every';
 
-// codeMirror.defineSimpleMode('jsonmacro', {
-//     // The start state contains the rules that are intially used
-//     start: [
-//         {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
-//         {regex: /(?:end|if|then|else|and|or|not|is|in|for each|while|do)\b/, token: "keyword"},
-//         {regex: /true|false|none/, token: "atom"},
-//         {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
-//         {regex: /\/\/.*/, token: "comment"},
-//         {regex: /[-+\/*=<>]+/, token: "operator"},
-//         // indent and dedent properties guide autoindentation
-//         {regex: /then|else|do|\[|\(/, indent: true},
-//         {regex: /end|]|\)/, dedent: true},
-//         {regex: /[a-z$][\w$]*/, token: "variable"}
-//     ],
-//     meta: {
-//         dontIndentStates: [],
-//         lineComment: "//"
-//     }
-// });
+codeMirror.defineSimpleMode('jsonmacro', {
+    // The start state contains the rules that are intially used
+    start: [
+        {regex: /"(?:[^\\]|\\.)*?(?:"|$)/, token: "string"},
+        {regex: /(?:if|and|or|not|is|in|for each|while)\b/, token: "keyword"},
+        {regex: /true|false|none/, token: "atom"},
+        {regex: /0x[a-f\d]+|[-+]?(?:\.\d+|\d+\.?\d*)(?:e[-+]?\d+)?/i, token: "number"},
+        {regex: /\/\/.*/, token: "comment"},
+        {regex: /[-+\/*=<>]+/, token: "operator"},
+        // indent and dedent properties guide autoindentation
+        {regex: /(?:then|else|do|\[|\()\b/, token: "keyword", indent: true},
+        {regex: /(?:end|]|\))\b/, token: "keyword", dedent: true, dedentIfLineStart: true},
+        {regex: /[a-z$][\w$]*/, token: "variable"}
+    ],
+    meta: {
+        dontIndentStates: [],
+        lineComment: "//"
+    }
+});
 
 export function editor(element: HTMLElement) {
     const container = document.createElement('div');
@@ -46,13 +50,25 @@ export function editor(element: HTMLElement) {
     container.appendChild(leftCol);
     container.appendChild(rightCol);
 
-    const editorCm = codeMirror(editorEl, { value: '', mode: 'jsonmacro' });
+    const editorCm = codeMirror(editorEl, {
+        value: '',
+        mode: 'jsonmacro',
+        lineNumbers: true,
+        lineWrapping: true,
+        styleActiveLine: true,
+        autoCloseBrackets: true
+    });
     const outputCm = codeMirror(outputEl, { value: '', mode: 'application/json', readOnly: true });
     const consoleCm = codeMirror(consoleEl, { value: '', readOnly: true, lineWrapping: true });
 
     element.appendChild(container);
+    editorCm.refresh();
 
-    editorCm.on('changes', () => {
+    editorCm.on('changes', (cm, changes) => {
+        // Auto indent when not removing input
+        if (every(changes, c => !compact(c.removed).length)) {
+            editorCm.execCommand('indentAuto');
+        }
         render(editorCm.getValue(), outputCm, consoleCm);
     });
 }

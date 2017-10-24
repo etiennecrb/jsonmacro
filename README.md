@@ -22,7 +22,7 @@ This project aims at creating a set of tools to make your users code and to exec
 
 ### Code editor
 Using [http://codemirror.net/](CodeMirror)
- - [ ] Syntax highlighting
+ - [ ] Syntax highlighting (in progress)
  - [ ] Auto-completion
 
 ### Interpreter
