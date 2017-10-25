@@ -17,8 +17,8 @@ codeMirror.defineSimpleMode('jsonmacro', {
         {regex: /\/\/.*/, token: "comment"},
         {regex: /[-+\/*=<>]+/, token: "operator"},
         // indent and dedent properties guide autoindentation
-        {regex: /(?:then|else|do|\[|\()\b/, token: "keyword", indent: true},
-        {regex: /(?:end|]|\))\b/, token: "keyword", dedent: true, dedentIfLineStart: true},
+        {regex: /(?:then|else|do)\b/, token: "keyword", indent: true},
+        {regex: /(?:end)\b/, token: "keyword", dedent: true, dedentIfLineStart: true},
         {regex: /[a-z$][\w$]*/, token: "variable"}
     ],
     meta: {
