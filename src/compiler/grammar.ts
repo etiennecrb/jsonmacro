@@ -146,7 +146,7 @@ Term
   }
 
 SignedNumber "number"
-  = [+-]? Number { return parseFloat(text()); }
+  = [+-]? Number { return {'number': [parseFloat(text())]}; }
 
 Number
   = [0-9] "." [0-9]* 
@@ -206,7 +206,7 @@ IdentifierPart
 
 Array "array"
   = "[" __ elements:ElementList __ "]" {
-      return elements;
+      return {'array': elements};
     }
 
 ElementList
@@ -219,7 +219,7 @@ ElementList
 
 String "string"
   = '"' chars:StringCharacter* '"' {
-      return chars.join('');
+      return {'string': [chars.join('')]};
     }
 
 StringCharacter

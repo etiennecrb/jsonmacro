@@ -12,6 +12,7 @@ This project aims at creating a set of tools to make your users code and to exec
  - [x] If X then Y else Z
  - [x] NOT operator
  - [x] For each X in Y do Z
+ - [ ] IN operator
  - [ ] Handle signed expression like `a = -(1+2)`
  - [ ] While X do Y
  - [ ] All X in Y verify Z
@@ -26,5 +27,5 @@ Using [http://codemirror.net/](CodeMirror)
  - [ ] Auto-completion
 
 ### Interpreter
- - [ ] A JavaScript interpreter that executes compiled JsonScript
+ - [ ] A JavaScript interpreter that executes compiled JsonMacro
  
