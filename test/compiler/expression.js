@@ -30,12 +30,7 @@ test('Sum parsing', t => {
     'it should parse multiple sum expressions'
   );
   t.deepEqual(
-    rhs(
-      t,
-      compile(
-        'a = "string" + myVar - [] + myFunc() - myVar.myProp + (myVar.myMethod())'
-      )
-    ),
+    rhs(t, compile('a = "string" + myVar - [] + myFunc() - myVar.myProp + (myVar.myMethod())')),
     {
       '+': [
         {
@@ -91,12 +86,7 @@ test('Product parsing', t => {
     'it should parse multiple product expressions'
   );
   t.deepEqual(
-    rhs(
-      t,
-      compile(
-        'a = "string" * myVar / [] * myFunc() / myVar.myProp * (myVar.myMethod())'
-      )
-    ),
+    rhs(t, compile('a = "string" * myVar / [] * myFunc() / myVar.myProp * (myVar.myMethod())')),
     {
       '*': [
         {
@@ -149,10 +139,7 @@ test('Sum-product precedence', t => {
         {
           '+': [
             {
-              '/': [
-                { number: [2] },
-                { '-': [{ number: [3] }, { number: [1] }] }
-              ]
+              '/': [{ number: [2] }, { '-': [{ number: [3] }, { number: [1] }] }]
             },
             { '*': [{ number: [1] }, { number: [9] }] }
           ]
@@ -183,9 +170,7 @@ test('OR parsing', t => {
   t.deepEqual(
     rhs(
       t,
-      compile(
-        'a = "string" or myVar or [] or myFunc() or myVar.myProp or (myVar.myMethod())'
-      )
+      compile('a = "string" or myVar or [] or myFunc() or myVar.myProp or (myVar.myMethod())')
     ),
     {
       or: [
@@ -234,9 +219,7 @@ test('AND parsing', t => {
   t.deepEqual(
     rhs(
       t,
-      compile(
-        'a = "string" and myVar and [] and myFunc() and myVar.myProp and (myVar.myMethod())'
-      )
+      compile('a = "string" and myVar and [] and myFunc() and myVar.myProp and (myVar.myMethod())')
     ),
     {
       and: [
@@ -316,20 +299,14 @@ test('NOT parsing', t => {
   t.deepEqual(
     rhs(t, compile('a = 1 and not 0 or 2')),
     {
-      or: [
-        { and: [{ number: [1] }, { not: [{ number: [0] }] }] },
-        { number: [2] }
-      ]
+      or: [{ and: [{ number: [1] }, { not: [{ number: [0] }] }] }, { number: [2] }]
     },
     'it should parse simple NOT expression within boolean expression'
   );
   t.deepEqual(
     rhs(t, compile('a = 1 and not (0 or 2)')),
     {
-      and: [
-        { number: [1] },
-        { not: [{ or: [{ number: [0] }, { number: [2] }] }] }
-      ]
+      and: [{ number: [1] }, { not: [{ or: [{ number: [0] }, { number: [2] }] }] }]
     },
     'it should parse NOT expression within boolean expression with parentheses precedence'
   );
@@ -406,10 +383,7 @@ test('Expression type precedence', t => {
         {
           and: [
             {
-              '==': [
-                { number: [1] },
-                { '+': [{ number: [9] }, { number: [3] }] }
-              ]
+              '==': [{ number: [1] }, { '+': [{ number: [9] }, { number: [3] }] }]
             },
             { '>': [{ number: [2] }, { number: [1] }] }
           ]
@@ -417,10 +391,7 @@ test('Expression type precedence', t => {
         {
           '<=': [
             {
-              '+': [
-                { number: [4] },
-                { '/': [{ number: [3] }, { number: [2] }] }
-              ]
+              '+': [{ number: [4] }, { '/': [{ number: [3] }, { number: [2] }] }]
             },
             { number: [0] }
           ]
@@ -444,10 +415,7 @@ test('Expression type precedence', t => {
                 {
                   '/': [
                     {
-                      or: [
-                        { number: [1] },
-                        { '+': [{ number: [4] }, { number: [3] }] }
-                      ]
+                      or: [{ number: [1] }, { '+': [{ number: [4] }, { number: [3] }] }]
                     },
                     { number: [2] }
                   ]
@@ -464,19 +432,14 @@ test('Expression type precedence', t => {
   t.deepEqual(
     rhs(
       t,
-      compile(
-        'a = myVar == [] + "string" and myFunc(3, 4) > 1 or not myVar.myProp / (2) <= 0'
-      )
+      compile('a = myVar == [] + "string" and myFunc(3, 4) > 1 or not myVar.myProp / (2) <= 0')
     ),
     {
       or: [
         {
           and: [
             {
-              '==': [
-                { [TYPE_VAR]: ['myVar'] },
-                { '+': [{ array: [] }, { string: ['string'] }] }
-              ]
+              '==': [{ [TYPE_VAR]: ['myVar'] }, { '+': [{ array: [] }, { string: ['string'] }] }]
             },
             {
               '>': [

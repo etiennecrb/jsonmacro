@@ -1,35 +1,48 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 
 export default [
-    {
-        entry: 'build/editor/index.js',
-        dest: 'dist/jsonmacro.editor.js',
-        format: 'umd',
-        moduleName: 'JsonMacro',
-        plugins: [
-            resolve(),
-            commonjs()
-        ]
-    },
-    {
-        entry: 'build/compiler/index.js',
-        dest: 'dist/jsonmacro.compiler.js',
-        format: 'umd',
-        moduleName: 'JsonMacro',
-        plugins: [
-            resolve(),
-            commonjs()
-        ]
-    },
-    {
-        entry: 'build/interpreter/index.js',
-        dest: 'dist/jsonmacro.interpreter.js',
-        format: 'umd',
-        moduleName: 'JsonMacro',
-        plugins: [
-            resolve(),
-            commonjs()
-        ]
+  {
+    input: 'build/editor/index.js',
+    name: 'JsonMacro',
+    plugins: [
+      resolve(),
+      commonjs(),
+      sourcemaps()
+    ],
+    output: {
+      file: 'dist/jsonmacro.editor.js',
+      format: 'umd',
+      sourcemap: true
     }
+  },
+  {
+    input: 'build/compiler/index.js',
+    name: 'JsonMacro',
+    plugins: [
+      resolve(),
+      commonjs(),
+      sourcemaps()
+    ],
+    output: {
+      file: 'dist/jsonmacro.compiler.js',
+      format: 'umd',
+      sourcemap: true
+    }
+  },
+  {
+    input: 'build/interpreter/index.js',
+    name: 'JsonMacro',
+    plugins: [
+      resolve(),
+      commonjs(),
+      sourcemaps()
+    ],
+    output: {
+      file: 'dist/jsonmacro.interpreter.js',
+      format: 'umd',
+      sourcemap: true
+    }
+  }
 ];

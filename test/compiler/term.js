@@ -4,21 +4,9 @@ const { compile } = require('../../dist/jsonmacro.compiler');
 const { rhs, TYPE_VAR, TYPE_FUNC, TYPE_PROP, TYPE_CALL } = require('../utils');
 
 test('Number parsing', t => {
-  t.deepEqual(
-    rhs(t, compile('a = 8')),
-    { number: [8] },
-    'it should parse one digit integers'
-  );
-  t.deepEqual(
-    rhs(t, compile('a = 82')),
-    { number: [82] },
-    'it should parse any integer'
-  );
-  t.deepEqual(
-    rhs(t, compile('a = 8.2')),
-    { number: [8.2] },
-    'it should parse floats'
-  );
+  t.deepEqual(rhs(t, compile('a = 8')), { number: [8] }, 'it should parse one digit integers');
+  t.deepEqual(rhs(t, compile('a = 82')), { number: [82] }, 'it should parse any integer');
+  t.deepEqual(rhs(t, compile('a = 8.2')), { number: [8.2] }, 'it should parse floats');
   t.deepEqual(
     rhs(t, compile('a = 8.23')),
     { number: [8.23] },
@@ -34,21 +22,9 @@ test('Number parsing', t => {
     { number: [0.23] },
     'it should parse floats without leading 9 but multiple decimal places'
   );
-  t.deepEqual(
-    rhs(t, compile('a = -2')),
-    { number: [-2] },
-    'it should parse negative integers'
-  );
-  t.deepEqual(
-    rhs(t, compile('a = -2.34')),
-    { number: [-2.34] },
-    'it should parse negative floats'
-  );
-  t.deepEqual(
-    rhs(t, compile('a = +25')),
-    { number: [25] },
-    'it should parse "+" signed numbers'
-  );
+  t.deepEqual(rhs(t, compile('a = -2')), { number: [-2] }, 'it should parse negative integers');
+  t.deepEqual(rhs(t, compile('a = -2.34')), { number: [-2.34] }, 'it should parse negative floats');
+  t.deepEqual(rhs(t, compile('a = +25')), { number: [25] }, 'it should parse "+" signed numbers');
   t.throws(
     () => rhs(t, compile('a = --2')),
     undefined,
@@ -93,11 +69,7 @@ test('String parsing', t => {
     { string: ['this is a string'] },
     'it should parse strings with whitespaces'
   );
-  t.deepEqual(
-    rhs(t, compile('a = ""')),
-    { string: [''] },
-    'it should parse empty strings'
-  );
+  t.deepEqual(rhs(t, compile('a = ""')), { string: [''] }, 'it should parse empty strings');
   t.throws(
     () => rhs(t, compile("a = 'anything'")),
     undefined,
@@ -119,11 +91,7 @@ test('String parsing', t => {
 });
 
 test('Array parsing', t => {
-  t.deepEqual(
-    rhs(t, compile('a = []')),
-    { array: [] },
-    'it should parse empty arrays'
-  );
+  t.deepEqual(rhs(t, compile('a = []')), { array: [] }, 'it should parse empty arrays');
   t.deepEqual(
     rhs(t, compile('a = [8]')),
     { array: [{ number: [8] }] },
@@ -137,21 +105,14 @@ test('Array parsing', t => {
   t.deepEqual(
     rhs(t, compile('a = [8,2,4,5]')),
     {
-      array: [
-        { number: [8] },
-        { number: [2] },
-        { number: [4] },
-        { number: [5] }
-      ]
+      array: [{ number: [8] }, { number: [2] }, { number: [4] }, { number: [5] }]
     },
     'it should parse arrays with multiple elements'
   );
   t.deepEqual(
     rhs(
       t,
-      compile(
-        'a = [8, myVar, myFunc(), "string", (9), myVar.myMethod(), myVar.myProp, [1, 2]]'
-      )
+      compile('a = [8, myVar, myFunc(), "string", (9), myVar.myMethod(), myVar.myProp, [1, 2]]')
     ),
     {
       array: [
@@ -173,20 +134,13 @@ test('Array parsing', t => {
       array: [
         { '+': [{ number: [8] }, { number: [1] }] },
         {
-          or: [
-            { and: [{ [TYPE_VAR]: ['a'] }, { [TYPE_VAR]: ['b'] }] },
-            { [TYPE_VAR]: ['c'] }
-          ]
+          or: [{ and: [{ [TYPE_VAR]: ['a'] }, { [TYPE_VAR]: ['b'] }] }, { [TYPE_VAR]: ['c'] }]
         }
       ]
     },
     'it should parse arrays with computed elements'
   );
-  t.throws(
-    () => rhs(t, compile('a = [1,2,,3]')),
-    undefined,
-    'it should not allow elisions'
-  );
+  t.throws(() => rhs(t, compile('a = [1,2,,3]')), undefined, 'it should not allow elisions');
   t.end();
 });
 
@@ -241,9 +195,7 @@ test('Function call parsing', t => {
     'it should parse function calls with arguments'
   );
   t.deepEqual(
-    compile(
-      'myFunc(8, myVar, myFunc(), "string", (9), myVar.myMethod(), myVar.myProp, [1, 2])'
-    ),
+    compile('myFunc(8, myVar, myFunc(), "string", (9), myVar.myMethod(), myVar.myProp, [1, 2])'),
     [
       {
         [TYPE_FUNC]: [
@@ -263,11 +215,7 @@ test('Function call parsing', t => {
     ],
     'it should parse function calls with arguments of any type'
   );
-  t.throws(
-    () => compile('myFunc(1,2,,3)'),
-    undefined,
-    'it should not allow elisions'
-  );
+  t.throws(() => compile('myFunc(1,2,,3)'), undefined, 'it should not allow elisions');
   t.end();
 });
 
@@ -324,10 +272,7 @@ test('Variable property and methods parsing', t => {
   t.deepEqual(
     rhs(t, compile('a = myVar.myProp.myDeepProp')),
     {
-      [TYPE_PROP]: [
-        { [TYPE_PROP]: [{ [TYPE_VAR]: ['myVar'] }, 'myProp'] },
-        'myDeepProp'
-      ]
+      [TYPE_PROP]: [{ [TYPE_PROP]: [{ [TYPE_VAR]: ['myVar'] }, 'myProp'] }, 'myDeepProp']
     },
     'it should parse nested variable property'
   );
@@ -410,11 +355,7 @@ test('Variable property and methods parsing', t => {
   t.deepEqual(
     rhs(t, compile('a = b.myMethod(1, 5)')),
     {
-      [TYPE_CALL]: [
-        { [TYPE_VAR]: ['b'] },
-        'myMethod',
-        [{ number: [1] }, { number: [5] }]
-      ]
+      [TYPE_CALL]: [{ [TYPE_VAR]: ['b'] }, 'myMethod', [{ number: [1] }, { number: [5] }]]
     },
     'it should parse method call with arguments'
   );
@@ -443,29 +384,18 @@ test('Variable property and methods parsing', t => {
     },
     'it should parse method call with arguments of any type'
   );
-  t.throws(
-    () => compile('a = b.myMethod(1,2,,3)'),
-    undefined,
-    'it should not allow elisions'
-  );
+  t.throws(() => compile('a = b.myMethod(1,2,,3)'), undefined, 'it should not allow elisions');
   t.deepEqual(
     rhs(t, compile('a = myVar.myProp.myMethod()')),
     {
-      [TYPE_CALL]: [
-        { [TYPE_PROP]: [{ [TYPE_VAR]: ['myVar'] }, 'myProp'] },
-        'myMethod',
-        []
-      ]
+      [TYPE_CALL]: [{ [TYPE_PROP]: [{ [TYPE_VAR]: ['myVar'] }, 'myProp'] }, 'myMethod', []]
     },
     'it should parse nested variable method after property'
   );
   t.deepEqual(
     rhs(t, compile('a = myVar.myMethod().myProp')),
     {
-      [TYPE_PROP]: [
-        { [TYPE_CALL]: [{ [TYPE_VAR]: ['myVar'] }, 'myMethod', []] },
-        'myProp'
-      ]
+      [TYPE_PROP]: [{ [TYPE_CALL]: [{ [TYPE_VAR]: ['myVar'] }, 'myMethod', []] }, 'myProp']
     },
     'it should parse nested variable property after method'
   );

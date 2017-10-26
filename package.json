@@ -3,18 +3,18 @@
   "version": "1.0.0",
   "main": "dist/jsonmacro.cjs.js",
   "dependencies": {
-    "codemirror": "5.30.0",
+    "codemirror": "5.31.0",
     "lodash": "4.17.4",
     "pegjs": "0.10.0"
   },
   "devDependencies": {
-    "@types/codemirror": "0.0.48",
     "@types/pegjs": "0.10.0",
     "concurrently": "3.5.0",
     "prettier": "1.7.4",
-    "rollup": "^0.46.0",
-    "rollup-plugin-commonjs": "^8.0.2",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup": "0.50.0",
+    "rollup-plugin-commonjs": "8.0.2",
+    "rollup-plugin-node-resolve": "3.0.0",
+    "rollup-plugin-sourcemaps": "0.4.2",
     "tap-summary": "4.0.0",
     "tape": "4.8.0",
     "typescript": "2.5.3"
@@ -28,7 +28,7 @@
     "dev": "concurrently \"npm run tsc:watch\" \"npm run rollup:watch\"",
     "test": "node test/index.js | tap-summary",
     "pretest": "npm run build",
-    "prettify": "prettier --single-quote --write \"{css,src,test}/**/*.*\""
+    "prettify": "prettier --print-width 100 --single-quote --write \"{css,src,test}/**/*.*\""
   },
   "files": [
     "dist"
