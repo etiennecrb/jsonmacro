@@ -4,11 +4,7 @@ const { compile } = require('../../dist/jsonmacro.compiler');
 const { TYPE_VAR, TYPE_FUNC, TYPE_PROP, TYPE_CALL } = require('../utils');
 
 test('Empty strings parsing', t => {
-  t.deepEqual(
-    compile(''),
-    [],
-    'it should return an empty array if parsing the empty string'
-  );
+  t.deepEqual(compile(''), [], 'it should return an empty array if parsing the empty string');
   t.deepEqual(
     compile('  \n \r'),
     [],
@@ -42,10 +38,7 @@ test('Function call parsing', t => {
     compile('myFunc(myVar, "test")'),
     [
       {
-        [TYPE_FUNC]: [
-          'myFunc',
-          [{ [TYPE_VAR]: ['myVar'] }, { string: ['test'] }]
-        ]
+        [TYPE_FUNC]: ['myFunc', [{ [TYPE_VAR]: ['myVar'] }, { string: ['test'] }]]
       }
     ],
     'it should parse function call as a statement'
@@ -57,10 +50,7 @@ test('Function call parsing', t => {
         `),
     [
       {
-        [TYPE_FUNC]: [
-          'myFunc',
-          [{ [TYPE_VAR]: ['myVar'] }, { string: ['test'] }]
-        ]
+        [TYPE_FUNC]: ['myFunc', [{ [TYPE_VAR]: ['myVar'] }, { string: ['test'] }]]
       },
       { [TYPE_FUNC]: ['doNothing', []] }
     ],
@@ -78,11 +68,7 @@ test('If then else parsing', t => {
         `),
     [
       {
-        if: [
-          { '!=': [{ number: [1] }, { number: [0] }] },
-          [{ [TYPE_FUNC]: ['doNothing', []] }],
-          []
-        ]
+        if: [{ '!=': [{ number: [1] }, { number: [0] }] }, [{ [TYPE_FUNC]: ['doNothing', []] }], []]
       }
     ],
     'it should parse simple if then statement'
@@ -94,11 +80,7 @@ test('If then else parsing', t => {
         `),
     [
       {
-        if: [
-          { '!=': [{ number: [1] }, { number: [0] }] },
-          [{ [TYPE_FUNC]: ['doNothing', []] }],
-          []
-        ]
+        if: [{ '!=': [{ number: [1] }, { number: [0] }] }, [{ [TYPE_FUNC]: ['doNothing', []] }], []]
       }
     ],
     'it should allow if then statement without indentation'
