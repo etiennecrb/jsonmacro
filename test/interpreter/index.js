@@ -15,7 +15,7 @@ const input = `
 
 const options = {
   func: {
-    addToTotal: (int, context) => (context.total = (context.total || 0) + int),
+    addToTotal: (int, context) => {console.log(int); context.total = (context.total || 0) + int;},
     print: s => console.log(s)
   }
 };

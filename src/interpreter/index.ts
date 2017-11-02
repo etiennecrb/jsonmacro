@@ -1,67 +1,47 @@
 import _ from 'lodash';
 
-const statementHandler = {
-  '=': (statement, args, params) => {
-    const identifier = args[0]['var'][0];
-    const value = args[1];
-    params.local[identifier] = evalExpression(value, params);
-  },
-  func: (statement, args, params) => {
-    evalExpression(statement, params);
-  },
-  call: (statement, args, params) => {
-    evalExpression(statement, params);
-  },
-  if: (statement, args, params) => {
-    const [predicate, thenStatements, elseStatements] = args;
-    if (evalExpression(predicate, params)) {
-      evalStatements(thenStatements, params);
-    } else {
-      evalStatements(elseStatements, params);
-    }
-  },
-  foreach: (statement, args, params) => {
-    const identifier = args[0];
-    const values = evalExpression(args[1], params);
-    const statements = args[2];
-    if (Array.isArray(values)) {
-      values.forEach(value => {
-        params.local[identifier] = value;
-        evalStatements(statements, params);
-      });
-    }
-  }
+export interface IHandlerParams {
+  context: any,
+  registry: any,
+  func: any
+}
+
+export type StatementHandler = (statement: any, args: any[], params: IHandlerParams) => void
+export type ExpressionHandler = (args: any[], params: IHandlerParams) => any
+
+const statementHandler: {[operator: string]: StatementHandler} = {
+  '=': assignmentHandler,
+  func: (statement, args, params) => functionHandler(args, params),
+  if: ifHandler,
+  foreach: foreachHandler
 };
 
-const expressionHandler = {
-  func: (args, params) =>
-    params.func[args[0]](...args[1].map(exp => evalExpression(exp, params)), params.context),
-  var: (args, params) => params.local[args[0]],
-  and: (args, params) => args.reduce((result, arg) => result && arg, true),
-  or: (args, params) => args.reduce((result, arg) => result || arg, false),
-  not: (args, params) => !args[0],
-  '==': (args, params) => args[0] == args[1],
-  '!=': (args, params) => args[0] != args[1],
-  '>=': (args, params) => args[0] >= args[1],
-  '>': (args, params) => args[0] > args[1],
-  '<=': (args, params) => args[0] <= args[1],
-  '<': (args, params) => args[0] < args[1],
-  '+': (args, params) => args[0] + args[1],
-  '-': (args, params) => args[0] - args[1],
-  '*': (args, params) => args[0] * args[1],
-  '/': (args, params) => args[0] / args[1]
-};
-
-const primitiveHandler = {
-  number: args => args[0],
-  string: args => args[0],
-  array: args => args
+const expressionHandler: {[operator: string]: ExpressionHandler} = {
+  func: functionHandler,
+  var: varHandler,
+  and: andHandler,
+  or: orHandler,
+  not: notHandler,
+  '==': equalityHandler,
+  '!=': differenceHandler,
+  '>=': getHandler,
+  '>': gtHandler,
+  '<=': letHandler,
+  '<': ltHandler,
+  '+': addHandler,
+  '-': subtractHandler,
+  '*': multiplyHandler,
+  '/': divideHandler,
+  number: identity('number'),
+  array: identity('array'),
+  boolean: identity('boolean'),
+  string: identity('string')
 };
 
 export function run(jsonm, options) {
   const params = {
     context: {},
-    local: {},
+    registry: {},
     func: options.func
   };
 
@@ -79,25 +59,112 @@ function evalStatement(token, params) {
 }
 
 function evalExpression(token, params): any {
-  if (!_.isPlainObject(token)) {
-    return token;
-  }
-
   const { operator, args } = getTokenArguments(token);
-
-  if (isPrimitiveOperator(operator)) {
-    return primitiveHandler[operator](args);
-  } else {
-    return expressionHandler[operator](args.map(exp => evalExpression(exp, params)), params);
-  }
-}
-
-function isPrimitiveOperator(operator) {
-  return _.includes(['array', 'number', 'string'], operator);
+  return expressionHandler[operator](args, params);
 }
 
 function getTokenArguments(token) {
   const operator = _.keys(token)[0];
   const args = token[operator];
   return { operator, args };
+}
+
+function identity(op) {
+  return (args, params) => ({[op]: args});
+}
+
+function assignmentHandler(statement: any, args: any[], params: IHandlerParams) {
+  const identifier = args[0]['var'][0];
+  const value = args[1];
+  params.registry[identifier] = evalExpression(value, params);
+}
+
+function ifHandler(statement: any, args: any[], params: IHandlerParams) {
+  const [predicate, thenStatements, elseStatements] = args;
+  if (unpackPrimitive(evalExpression(predicate, params))) {
+    evalStatements(thenStatements, params);
+  } else {
+    evalStatements(elseStatements, params);
+  }
+}
+
+function foreachHandler(statement: any, args: any[], params: IHandlerParams) {
+  const identifier = args[0];
+  const values = unpackPrimitive(evalExpression(args[1], params));
+  const statements = args[2];
+  for (let i = 0; i < values.length; i++) {
+    params.registry[identifier] = values[i];
+    evalStatements(statements, params);
+  }
+}
+
+function varHandler(args: any[], params: IHandlerParams) {
+  return params.registry[args[0]];
+}
+
+function functionHandler(args: any[], params: IHandlerParams) {
+  const identifier = args[0];
+  const argValues = args[1].map(exp => unpackPrimitive(evalExpression(exp, params)));
+  return params.func[identifier](...argValues, params.context);
+}
+
+function andHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [args.reduce((result, arg) => result && unpackPrimitive(evalExpression(arg, params)), true)]};
+}
+
+function orHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [args.reduce((result, arg) => result || unpackPrimitive(evalExpression(arg, params)), false)]};
+}
+
+function notHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [!unpackPrimitive(evalExpression(args[0], params))]};
+}
+
+function equalityHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) === unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function differenceHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) !== unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function gtHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) > unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function getHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) >= unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function ltHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) < unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function letHandler(args: any[], params: IHandlerParams) {
+  return {'boolean': [unpackPrimitive(evalExpression(args[0], params)) <= unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function addHandler(args: any[], params: IHandlerParams) {
+  return {'number': [unpackPrimitive(evalExpression(args[0], params)) + unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function subtractHandler(args: any[], params: IHandlerParams) {
+  return {'number': [unpackPrimitive(evalExpression(args[0], params)) - unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function multiplyHandler(args: any[], params: IHandlerParams) {
+  return {'number': [unpackPrimitive(evalExpression(args[0], params)) * unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function divideHandler(args: any[], params: IHandlerParams) {
+  return {'number': [unpackPrimitive(evalExpression(args[0], params)) / unpackPrimitive(evalExpression(args[1], params))]};
+}
+
+function unpackPrimitive(token) {
+  const { operator, args } = getTokenArguments(token);
+  if (operator === 'number' || operator === 'string' || operator === 'boolean') {
+    return args[0];
+  } else if (operator === 'array') {
+    return args;
+  }
 }
